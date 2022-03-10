@@ -13,7 +13,7 @@ const App = () => {
   const startService = async () => {
     await esbuild.initialize({
       worker: true,
-      wasmURL: "/esbuild.wasm",
+      wasmURL: "https://unpkg.com/esbuild-wasm@0.8.27/esbuild.wasm",
     });
 
     ref.current = true;
@@ -32,7 +32,7 @@ const App = () => {
       write: false,
       plugins: [unpkgPathPlugin(), fetchPlugin(input)],
       define: {
-        "process.ev.NODE_ENV": "'production'",
+        "process.env.NODE_ENV": "'production'",
         global: "window",
       },
     });
@@ -56,4 +56,4 @@ const App = () => {
   );
 };
 
-ReactDOM.render(<App />, document.getElementById("root"));
+ReactDOM.render(<App />, document.querySelector("#root"));
