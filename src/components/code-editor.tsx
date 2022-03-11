@@ -1,29 +1,45 @@
 import "./code-editor.css";
-
+import "./syntax.css";
 import { useRef } from "react";
-import "bulmaswatch/superhero/bulmaswatch.min.css";
-
-import MonacoEditor, { OnChange, OnMount } from "@monaco-editor/react";
+import MonacoEditor, { EditorDidMount } from "@monaco-editor/react";
 import prettier from "prettier";
 import parser from "prettier/parser-babel";
+import codeShift from "jscodeshift";
+import Highlighter from "monaco-jsx-highlighter";
 
 interface CodeEditorProps {
   initialValue: string;
-  onChange(value: string | undefined): void;
+  onChange(value: string): void;
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({ onChange, initialValue }) => {
   const editorRef = useRef<any>();
 
-  const handleEditorChange: OnChange = (value) => onChange(value);
-  const handleEditorDidMount: OnMount = (editor) => {
-    editor.getModel()?.updateOptions({ tabSize: 2 });
-    editorRef.current = editor;
+  const onEditorDidMount: EditorDidMount = (getValue, monacoEditor) => {
+    editorRef.current = monacoEditor;
+    monacoEditor.onDidChangeModelContent(() => {
+      onChange(getValue());
+    });
+
+    monacoEditor.getModel()?.updateOptions({ tabSize: 2 });
+
+    const highlighter = new Highlighter(
+      // @ts-ignore
+      window.monaco,
+      codeShift,
+      monacoEditor
+    );
+    highlighter.highLightOnDidChangeModelContent(
+      () => {},
+      () => {},
+      undefined,
+      () => {}
+    );
   };
 
   const onFormatClick = () => {
     // get current value from editor
-    const unformatted = editorRef.current.getModel()?.getValue();
+    const unformatted = editorRef.current.getModel().getValue();
 
     // format that value
     const formatted = prettier
@@ -32,7 +48,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ onChange, initialValue }) => {
         plugins: [parser],
         useTabs: false,
         semi: true,
-        singleQuote: false,
+        singleQuote: true,
       })
       .replace(/\n$/, "");
 
@@ -49,10 +65,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ onChange, initialValue }) => {
         Format
       </button>
       <MonacoEditor
-        onChange={handleEditorChange}
-        onMount={handleEditorDidMount}
+        editorDidMount={onEditorDidMount}
         value={initialValue}
-        theme="vs-dark"
+        theme="dark"
         language="javascript"
         height="500px"
         options={{
