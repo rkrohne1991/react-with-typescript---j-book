@@ -5,11 +5,11 @@ import "./text-editor.css";
 import { Cell } from "../state";
 import { useActions } from "../hooks/use-actions";
 
-interface CodeCellProps {
+interface TextEditorProps {
   cell: Cell;
 }
 
-const TextEditor: React.FC<CodeCellProps> = ({ cell }) => {
+const TextEditor: React.FC<TextEditorProps> = ({ cell }) => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [editing, setEditing] = useState(false);
   const { updateCell } = useActions();
@@ -27,9 +27,10 @@ const TextEditor: React.FC<CodeCellProps> = ({ cell }) => {
     };
     document.addEventListener("click", listener, { capture: true });
 
-    return () =>
-      document.addEventListener("click", listener, { capture: true });
-  });
+    return () => {
+      document.removeEventListener("click", listener, { capture: true });
+    };
+  }, []);
 
   if (editing) {
     return (
@@ -43,7 +44,7 @@ const TextEditor: React.FC<CodeCellProps> = ({ cell }) => {
   }
 
   return (
-    <div className="text-editor" onClick={() => setEditing(true)}>
+    <div className="text-editor card" onClick={() => setEditing(true)}>
       <div className="card-content">
         <MDEditor.Markdown source={cell.content || "Click to edit"} />
       </div>
